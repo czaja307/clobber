@@ -3,7 +3,7 @@ from game import Clobber, get_other_player
 from player import Player
 
 if __name__ == "__main__":
-    game = Clobber(5, 6)
+    game = Clobber(10, 10)
 
     heuristic = simple_heuristic
 
@@ -13,9 +13,9 @@ if __name__ == "__main__":
     while True:
         print(game)
         if game.player_turn == "B":
-            move = player_black.choose_move_minimax()
+            move = player_black.choose_move_alpha_beta()
         else:
-            move = player_white.choose_move_minimax()
+            move = player_white.choose_move_alpha_beta()
 
         if move is None:
             print(
