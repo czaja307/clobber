@@ -80,7 +80,7 @@ def get_other_player(player):
 
 if __name__ == "__main__":
     rows = 2
-    cols = 1
+    cols = 3
     game = Clobber(rows, cols)
     print(game)
 
