@@ -11,33 +11,39 @@ class Clobber:
         self.board = create_board(rows, cols)
         self.player_turn = "B"
 
-    def is_valid_move(self, start_row, start_col, end_row, end_col, player, player_turn):
+    def is_valid_move(self, start_row, start_col, end_row, end_col, player):
         if player not in ["B", "W"]:
-            print("Error: The player must be 'B' or 'W'.")
-            return False
-        if player != player_turn:
-            print("Error: It's not your turn.")
-            return False
-        if self.board[start_row][start_col] != player:
-            print("Error: The player must move their own piece.")
-            return False
-        if self.board[end_row][end_col] != get_other_player(player):
-            print("Error: The destination must be an opponent's piece.")
-            return False
+            return False, "Invalid move. The player must be 'B' or 'W'."
+        if player != self.player_turn:
+            return False, "Invalid move. It's not your turn."
         if (abs(start_row - end_row) + abs(start_col - end_col)) != 1:
-            print("Error: The move must be to an adjacent square.")
-            return False
+            return False, "Invalid move. The move must be to an adjacent square."
         if start_row < 0 or start_row >= self.rows or end_row < 0 or end_row >= self.rows:
-            print("Error: The move must be within the board (row out of bounds).")
-            return False
+            return False, "Invalid move. The move must be within the board (row out of bounds)."
         if start_col < 0 or start_col >= self.cols or end_col < 0 or end_col >= self.cols:
-            print("Error: The move must be within the board (column out of bounds).")
-            return False
-        return True
+            return False, "Invalid move. The move must be within the board (column out of bounds)."
+        if self.board[start_row][start_col] != player:
+            return False, "Invalid move. The player must move their own piece."
+        if self.board[end_row][end_col] != get_other_player(player):
+            return False, "Invalid move. The destination must be an opponent's piece."
+        return True, "Valid move."
+
+    def get_valid_moves(self, player):
+        moves = []
+        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+        for x in range(self.rows):
+            for y in range(self.cols):
+                if self.board[x][y] == player:
+                    for dx, dy in directions:
+                        is_valid, message = self.is_valid_move(x, y, x + dx, y + dy, player)
+                        if is_valid:
+                            moves.append((x, y, x + dx, y + dy))
+        return moves
 
     def make_move(self, start_row, start_col, end_row, end_col, player):
-        if not self.is_valid_move(start_row, start_col, end_row, end_col, player, self.player_turn):
-            raise ValueError("Invalid move.")
+        is_valid, message = self.is_valid_move(start_row, start_col, end_row, end_col, player)
+        if not is_valid:
+            raise ValueError(message)
 
         self.board[end_row][end_col] = player
         self.board[start_row][start_col] = "_"
@@ -73,11 +79,9 @@ def get_other_player(player):
 
 
 if __name__ == "__main__":
-    rows = 5
-    cols = 6
+    rows = 2
+    cols = 1
     game = Clobber(rows, cols)
     print(game)
-    game.make_move(0, 0, 1, 0, "B")
-    print(game)
-    game.make_move(3, 0, 3, 1, "W")
-    print(game)
+
+    print(game.get_valid_moves("B"))
