@@ -80,4 +80,25 @@ def random_heuristic(game):
     return random.randint(-100, 100)
 
 
+def adaptive_heuristic(game):
+    """
+    Adaptive heuristic:
+    - Early game: prefers occupying the center
+    - Mid game: prefers grouping pieces
+    - End game: prefers mobility
+    """
+    total_pieces = sum(row.count("B") + row.count("W") for row in game.board)
+    max_pieces = game.rows * game.cols
+    percent_left = total_pieces / max_pieces
+
+    if percent_left > 0.7:
+        # Early game
+        return center_control_heuristic(game)
+    elif percent_left > 0.3:
+        # Mid game
+        return grouping_heuristic(game)
+    else:
+        # End game
+        return mobility_heuristic(game)
+
 
