@@ -22,12 +22,15 @@ class Player:
 
         for move in valid_moves:
             start_row, start_col, end_row, end_col = move
-            # Create a copy of the game to simulate moves
-            game_copy = self._copy_game()
-            game_copy.make_move(start_row, start_col, end_row, end_col, self.color)
+
+            # Make move directly on the game
+            self.game.make_move(start_row, start_col, end_row, end_col, self.color)
 
             # Get score from minimax
-            score = self._minimax(game_copy, self.depth - 1, False)
+            score = self._minimax(self.game, self.depth - 1, False)
+
+            # Undo move
+            self.game.undo_move(start_row, start_col, end_row, end_col, self.color)
 
             if score > best_score:
                 best_score = score
@@ -36,7 +39,7 @@ class Player:
         return best_move
 
     def _minimax(self, game, depth, is_maximizing):
-        """Minimax algorithm implementation"""
+        """Minimax algorithm implementation with move/undo"""
         if depth == 0:
             return self.heuristic(game) if self.color == "B" else -self.heuristic(game)
 
@@ -46,24 +49,27 @@ class Player:
         if not valid_moves:  # Game over
             return float('-inf') if is_maximizing else float('inf')
 
-        if is_maximizing:
-            max_score = float('-inf')
-            for move in valid_moves:
-                start_row, start_col, end_row, end_col = move
-                game_copy = self._copy_game(game)
-                game_copy.make_move(start_row, start_col, end_row, end_col, current_player)
-                score = self._minimax(game_copy, depth - 1, False)
-                max_score = max(max_score, score)
-            return max_score
-        else:
-            min_score = float('inf')
-            for move in valid_moves:
-                start_row, start_col, end_row, end_col = move
-                game_copy = self._copy_game(game)
-                game_copy.make_move(start_row, start_col, end_row, end_col, current_player)
-                score = self._minimax(game_copy, depth - 1, True)
-                min_score = min(min_score, score)
-            return min_score
+        best_score = float('-inf') if is_maximizing else float('inf')
+
+        for move in valid_moves:
+            start_row, start_col, end_row, end_col = move
+
+            # Make move
+            game.make_move(start_row, start_col, end_row, end_col, current_player)
+
+            # Evaluate position
+            score = self._minimax(game, depth - 1, not is_maximizing)
+
+            # Undo move
+            game.undo_move(start_row, start_col, end_row, end_col, current_player)
+
+            # Update best score
+            if is_maximizing:
+                best_score = max(best_score, score)
+            else:
+                best_score = min(best_score, score)
+
+        return best_score
 
     def choose_move_alpha_beta(self):
         """Use minimax with alpha-beta pruning to find the best move"""
@@ -78,10 +84,15 @@ class Player:
 
         for move in valid_moves:
             start_row, start_col, end_row, end_col = move
-            game_copy = self._copy_game()
-            game_copy.make_move(start_row, start_col, end_row, end_col, self.color)
 
-            score = self._alpha_beta(game_copy, self.depth - 1, alpha, beta, False)
+            # Make move
+            self.game.make_move(start_row, start_col, end_row, end_col, self.color)
+
+            # Evaluate
+            score = self._alpha_beta(self.game, self.depth - 1, alpha, beta, False)
+
+            # Undo move
+            self.game.undo_move(start_row, start_col, end_row, end_col, self.color)
 
             if score > best_score:
                 best_score = score
@@ -92,7 +103,7 @@ class Player:
         return best_move
 
     def _alpha_beta(self, game, depth, alpha, beta, is_maximizing):
-        """Minimax algorithm with alpha-beta pruning"""
+        """Alpha-beta pruning with move/undo"""
         if depth == 0:
             return self.heuristic(game) if self.color == "B" else -self.heuristic(game)
 
@@ -106,9 +117,16 @@ class Player:
             max_score = float('-inf')
             for move in valid_moves:
                 start_row, start_col, end_row, end_col = move
-                game_copy = self._copy_game(game)
-                game_copy.make_move(start_row, start_col, end_row, end_col, current_player)
-                score = self._alpha_beta(game_copy, depth - 1, alpha, beta, False)
+
+                # Make move
+                game.make_move(start_row, start_col, end_row, end_col, current_player)
+
+                # Evaluate
+                score = self._alpha_beta(game, depth - 1, alpha, beta, False)
+
+                # Undo move
+                game.undo_move(start_row, start_col, end_row, end_col, current_player)
+
                 max_score = max(max_score, score)
                 alpha = max(alpha, max_score)
                 if beta <= alpha:
@@ -118,21 +136,21 @@ class Player:
             min_score = float('inf')
             for move in valid_moves:
                 start_row, start_col, end_row, end_col = move
-                game_copy = self._copy_game(game)
-                game_copy.make_move(start_row, start_col, end_row, end_col, current_player)
-                score = self._alpha_beta(game_copy, depth - 1, alpha, beta, True)
+
+                # Make move
+                game.make_move(start_row, start_col, end_row, end_col, current_player)
+
+                # Evaluate
+                score = self._alpha_beta(game, depth - 1, alpha, beta, True)
+
+                # Undo move
+                game.undo_move(start_row, start_col, end_row, end_col, current_player)
+
                 min_score = min(min_score, score)
                 beta = min(beta, min_score)
                 if beta <= alpha:
                     break  # Alpha cutoff
             return min_score
-
-    def _copy_game(self, game=None):
-        """Create a copy of the game to simulate moves"""
-        from copy import deepcopy
-        game_to_copy = game if game else self.game
-        game_copy = deepcopy(game_to_copy)
-        return game_copy
 
     def __str__(self):
         return f"Player {self.color}"

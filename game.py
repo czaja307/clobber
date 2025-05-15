@@ -49,6 +49,15 @@ class Clobber:
         self.board[start_row][start_col] = "_"
         self.player_turn = get_other_player(self.player_turn)
 
+    def undo_move(self, start_row, start_col, end_row, end_col, player):
+        """Undo a move by restoring the original state"""
+        # Put the moved piece back to its original position
+        self.board[start_row][start_col] = player
+        # Restore the opponent's piece that was captured
+        self.board[end_row][end_col] = get_other_player(player)
+        # Switch back to the previous player
+        self.player_turn = player
+
     def __str__(self):
         board_str = ""
         for row in self.board:
